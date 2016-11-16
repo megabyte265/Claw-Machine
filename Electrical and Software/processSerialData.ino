@@ -49,11 +49,12 @@ void bitsToDigitalWrite(char buttons[], int len)
  */
 {
   String bitString;
+  int pins[len] = {0};
   for (int i=0; i<len; i++)         // while loop iterates through each input string index
   {
     bitString = buttons[i];
-    pinValue = bitString.toInt();   // parses character to integer
-    digitalWrite(i+2, pinValue)     // sets pin value to high or low
+    pins[i] = bitString.toInt();    // parses character to integer
+    digitalWrite(i+2, pins[i]);     // sets pin value to high or low
   }
   digitalWrite(13, pins[0]);        // test to determine if button 1 is pressed
 }
@@ -66,9 +67,9 @@ void loop() {
   char buttons[numberButtons];
   if (Serial.available() > numberButtons)
   {
-    bytes = Serial.readBytes(buttons, numberOutputs);   // reads specific number of bytes to buttons buffer
+    bytes = Serial.readBytes(buttons, numberButtons);   // reads specific number of bytes to buttons buffer
     if (bytes > 0) {                                    // only calls function if bytes have been read
-      bitsToDigitalWrite(buttons, len);                 // passes buffer (char array) to function for parsing
+      bitsToDigitalWrite(buttons, numberOutputs);       // passes buffer (char array) to function for parsing
     }
   }
 }
