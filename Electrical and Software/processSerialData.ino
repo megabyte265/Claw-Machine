@@ -3,13 +3,13 @@
  * Author: Shane Williams
  * Author Contact: smw0031@auburn.edu
  * Last Edit: 8 November 2016
- * 
+ *
  * Description:
  *    processSerialData is a preliminary Arduino sketch used for the S.C.O.R.E. crane machine project.
  *    Ultimately, this program's purpose is to make the Arduino read serial input from a
  *    Raspberry Pi or computer, and interpret that serial data as values used to drive digital output pins.
  *    The digital output pins shall be connected to motor controllers and servos to drive the crane machine.
- * 
+ *
  * Present State of Development:
  *    Currently, functions are being developed to convert data received from the serial port into a form that can
  *    be used to control digital ouput pins.
@@ -22,7 +22,7 @@
  *       --Using button to "Start" game mode
  *       --Using button command to make claw DROP, GRAB, RISE, and RETURN HOME
  *       --Setting limits of claw's range of motion
- *     
+ *
  */
 
 /*
@@ -32,7 +32,7 @@
  digitalWrite()   https://www.arduino.cc/en/Reference/DigitalWrite
 */
 
-void setup() 
+void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);                // open serial port. Baud rate is 9600
@@ -104,7 +104,7 @@ void loop() {
                                                           // trigger the digital write lines...must confirm format of Serial.readString()
         pinValues.replace(" ","");                        // formats string
         pinValues.replace(",","");                        // formats string
-         Serial.println(pinValues);  
+         Serial.println(pinValues);
         delay(1000);
         if (pinValues.charAt(0)=='1')
         {
@@ -119,7 +119,7 @@ void loop() {
         pinValues = "1, 0, 1, 1, 0, 1, 0, 0";      // variable used during debugging. will be replaced by value read from joystick
         pinValues.replace(" ","");                        // formats string
         pinValues.replace(",","");                        // formats string
-        Serial.println(pinValues);  
+        Serial.println(pinValues);
         delay(1000);
         if (pinValues.charAt(0)=='1')
         {
@@ -130,7 +130,7 @@ void loop() {
         {
           digitalWrite(2, LOW);
         }
-        
+
         // char pins[8]={bitsToDigitalWrite(pinValues)};     // I want to store the array of HIGH and LOW in pins[]
                                                           //    will use this variable to set digitalOutput pins
         // Serial.println(pins);
