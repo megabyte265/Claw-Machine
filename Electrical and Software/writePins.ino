@@ -5,8 +5,8 @@ Serial.begin(9600);                // open serial port. Baud rate is 9600
   for (int i=2;i<=9;i++)
   {
     pinMode(i, OUTPUT);
-    pinMode(12, OUTPUT);
   }
+  pinMode(12, OUTPUT);
   while(!Serial)
   {
 //    digitalWrite(13, HIGH);
