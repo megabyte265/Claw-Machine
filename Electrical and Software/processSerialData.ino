@@ -34,40 +34,41 @@
 
 void setup()
 {
-  Serial.begin(9600);                   // open serial port. Baud rate is 9600
-  for (int i=2;i<=9;i++)                // loop to initialize pins
+  Serial.begin(9600);     // open serial port. Baud rate is 9600
+  for (int i=2;i<=9;i++)  // loop to initialize pins
   {
     pinMode(i, OUTPUT);
   }
-  pinMode(13, OUTPUT);                  // adds pin 13 (built-in LED) for testing
+  pinMode(13, OUTPUT);    // adds pin 13 (built-in LED) for testing
 }
 
-void bitsToDigitalWrite(char buttons[], int pinValues[], int len)
+void bitsToDigitalWrite(char buttons[], int len)
 /*
  * bitsToDigitalWrite is meant to take a char array of ones and zeros (like 10110100)
  * and convert it into an array of integers, which can be passed directly to digitalWrite.
  */
 {
   String bitString;
-  for (int i=0; i<len; i++)             // while loop iterates through each input string index
+  for (int i=0; i<len; i++)         // while loop iterates through each input string index
   {
     bitString = buttons[i];
-    pinValues[i] = bitString.toInt();   // parses char to integer, stores in array
+    pinValue = bitString.toInt();   // parses character to integer
+    digitalWrite(i+2, pinValue)     // sets pin value to high or low
   }
+  digitalWrite(13, pins[0]);        // test to determine if button 1 is pressed
 }
 
 
 void loop() {
-  int len = 16;
-  int bytes;
-  char buttons[len];
-  int pins[len] = {0};
-  if (Serial.available() > 0)
+  int numberButtons = 16;
+  int numberOutputs = 8;
+  int bytes;                                            // number of bytes read
+  char buttons[numberButtons];
+  if (Serial.available() > numberButtons)
   {
-    bytes = Serial.readBytes(buttons, len);     // reads specific number of bytes to buttons buffer
-    if (bytes > 0) {
-      bitsToDigitalWrite(buttons, pins, len);   // passes buffer (char array) to function for parsing
+    bytes = Serial.readBytes(buttons, numberOutputs);   // reads specific number of bytes to buttons buffer
+    if (bytes > 0) {                                    // only calls function if bytes have been read
+      bitsToDigitalWrite(buttons, len);                 // passes buffer (char array) to function for parsing
     }
-    digitalWrite(13, pins[0]);                  // test to determine if button 1 is pressed
   }
 }
