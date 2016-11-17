@@ -1,7 +1,8 @@
+#!/usr/bin/python3
 # joystick.py
 # Author: Shane Williams
 # Author contact: smw0031@auburn.edu
-# Last Edit: 8 November 2016 by Shane Williams
+# Last Edit: 16 November 2016 by Eric Van Horn
 # Program description:
 #   joystick.py is a basic program meant to interact with a basic HID joystick device. It reads the values of the
 #   joystick's axes and represents them on a display screen. This program was written for use with a
@@ -12,6 +13,9 @@
 #   New function writeArduino() opens serial connection to Arduino, writes joystick data, and closes serial connection.
 #   Both strings sent to arduino consist of integer values. One is of the axes, this needs to be divided by 1000 in the
 #   arduino code. One is the button values, 0s and 1s, to control future subfunctions
+#
+#   Removed writeArduino function, folded into existing structure (prevents having to close arduino communication with
+#   each call).
 #
 # Required packages:
 #   pygame
@@ -56,14 +60,6 @@ def readJoystick(joystick):
     return axispostn, buttonvals                    # add variables to return for other joysticks
 
 
-def writeArduino(writeValue):
-    ard = serial.Serial('COM4', 9600)
-    ard.write(writeValue)
-    ard.close()
-    return
-
-
-
 if pygame.joystick.get_init():                      # Run program if joystick is detected/module is initialized
     # joystick = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
     # print(pygame.joystick.get_count())
@@ -79,8 +75,9 @@ if pygame.joystick.get_init():                      # Run program if joystick is
     # ### ### #
     # p.start(0)                                    # Start PWM
     # ### Open window ### #
+    ard = serial.Serial('/dev/ttyUSB0', 9600)
     screen = pygame.display.set_mode((400,400))     # Creates a pygame screen object to write shapes to
-    while(1):                                       # Run loop continuously until break
+    while True:                                       # Run loop continuously until break
         axes, buttons = readJoystick(joystick)[0], readJoystick(joystick)[1]        # axes[0] = x, axes[1] = y, axes[3] = z
         # print(axes)                               # Uncomment if useful for debugging
         time.sleep(0.13)                            # Controls refresh timing
@@ -95,13 +92,16 @@ if pygame.joystick.get_init():                      # Run program if joystick is
         dc = int(((-axes[2]+1)*100)/2)             # Set Duty Cycle
         # p.ChangeDutyCycle(dc)                     # Change duty cycle for p
         # print('Duty Cycle ' + str(dc))
-        axess, buttonss= readJoystick(joystick)
-        axess = [int(xi*1000) for xi in axess]           # multplies axes' floating points to make them ints for serial transmission
-        # buttonss =                                    # convert this list of 1s and 0s to HIGHs and LOWs, then send to Arduino
-        writeArduino(buttonss)
-        print(axess,buttonss)
+        axes, buttons = readJoystick(joystick)
+        axess = [int(xi*1000) for xi in axes]           # multiplies axes' floating points to make them ints for serial transmission
+        buttonString = ''.join([str(i) for i in buttons]) # convert this list of 1s and 0s to HIGHs and LOWs, then send to Arduino
+        ard.write(buttonString.encode())
+        # print(axes, axess)
+        print(buttonString)
         # print()                                     # Prints button values (index [1]) of return from readJoystick()
         if (buttons[0] & buttons[1]  & buttons[4] & buttons[6]):  # If buttons labelled 1,2,5,and 7 are pressed...
             break                                   # Break out of while loop
+
+    ard.close()
 
 joystick.quit()                                     # closes joystick object
