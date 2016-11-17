@@ -5,17 +5,17 @@ Serial.begin(9600);                // open serial port. Baud rate is 9600
   for (int i=2;i<=9;i++)
   {
     pinMode(i, OUTPUT);
-    pinMode(12, OUTPUT);
   }
+  pinMode(12, OUTPUT);
   while(!Serial)
   {
 //    digitalWrite(13, HIGH);
   }
 }
 
-void loop() 
+void loop()
 {
-  // char  bitValues[8] = {1,0,1,1,0,1,0,0}; 
+  // char  bitValues[8] = {1,0,1,1,0,1,0,0};
    char bitValues[8] = {0,1,0,0,1,0,1,1};
   // char bitValues[8];
 
@@ -24,7 +24,7 @@ void loop()
 //  digitalWrite(12, HIGH);
 //}
 
-  
+
 //    for (int i=0;i<8;i++)
 //    {
 //      bitValues[i]=Serial.read();
@@ -32,12 +32,12 @@ void loop()
 //      delay(700);
 //      digitalWrite(12, LOW);
 //      delay(700);
-//      
+//
 //    }
 
 // digitalWrite(13, Serial.read() == '1');
-  
-    
+
+
     // Serial.println(bitValues);
     while (it<8)
     {
@@ -54,11 +54,11 @@ void loop()
       Serial.println(bitValues[it]);
       it++;
       delay(500);
-    
+
     }
     it=0;
     //delay(2500);
-    
+
     while (it<8)
     {
       int pin=2+it;
