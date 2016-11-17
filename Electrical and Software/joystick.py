@@ -39,7 +39,6 @@ import tkinter
 
 pygame.init()                                       # Initializes pygame module
 pygame.joystick.init()                              # Initializes pygame.joystick module
-time.sleep(0.5)                                     # Allow some time, just in case
 
 def readJoystick(joystick):
     """The function readJoystick() reads all the values sent from the joystick. NOTE: The Sidewinder joystick only has
@@ -80,7 +79,7 @@ if pygame.joystick.get_init():                      # Run program if joystick is
     while True:                                       # Run loop continuously until break
         axes, buttons = readJoystick(joystick)[0], readJoystick(joystick)[1]        # axes[0] = x, axes[1] = y, axes[3] = z
         # print(axes)                               # Uncomment if useful for debugging
-        time.sleep(0.13)                            # Controls refresh timing
+        time.sleep(0.03)                            # Controls refresh timing
         xps = int(axes[0]*200+200)                  # modifies x-axis return values to be centered in middle of SCREEN
         yps = int(axes[1]*200+200)                  # modifies y-axis return values to be centered in middle of SCREEN
         zps = int((-axes[2]+1.1)*20)                # negative b/c Sidewinder joystick returns -1 for lever in high position
