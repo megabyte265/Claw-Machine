@@ -42,6 +42,49 @@ void setup()
   pinMode(13, OUTPUT);    // adds pin 13 (built-in LED) for testing
 }
 
+
+int hexToInt(String hexString) {
+  int len = hexString.length();
+  int value = 0;
+  int tempValue;
+  int power;
+  byte tempBit;
+  for (int i = 0; i < len; i++) {
+    tempBit = byte(hexString[i]);
+    if (tempBit >= '0' and tempBit <= '9') {
+      tempValue = int(tempBit - '0');
+    }
+    else if (tempBit >= 'A' and tempBit <= 'F') {
+      tempValue = int(tempBit - 'A' + 10);
+    }
+    else if (tempBit >= 'a' and tempBit <= 'f') {
+      tempValue = int(tempBit - 'a' + 10);
+    }
+    value += tempValue*bit((len-i-1)*4);
+  }
+  return value;
+}
+
+
+void hexToAxes(String byteString, int ax1, int ax2) {
+/* hexToAxes takes a string representing a string containing the hexadecimal
+   representation of integers corresponding to two signed integers and
+   converts them to integers for the individual axes.
+*/
+
+  String byteString1 = byteString.substring(0, 3);
+  ax1 = hexToInt(byteString1.substring(1));
+  if (byteString.charAt(0) == '1') {
+    ax1 *= -1;
+  }
+
+  String byteString2 = byteString.substring(4, 7);
+  ax2 = hexToInt(byteString2.substring(1));
+  if (byteString.charAt(4) == '1') {
+    ax2 *= -1;
+  }
+}
+
 void bitsToDigitalWrite(char buttons[], int len)
 /*
  * bitsToDigitalWrite is meant to take a char array of ones and zeros (like 10110100)
