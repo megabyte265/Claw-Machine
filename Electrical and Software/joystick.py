@@ -59,6 +59,29 @@ def readJoystick(joystick):
     return axispostn, buttonvals                    # add variables to return for other joysticks
 
 
+def buttonsToHex(buttonArray):
+    """The function binaryToHex() converts a binary array of button
+    states to a hexadecimal string, using a four byte word."""
+    bits = ''.join([str(b) for b in buttonArray])
+    return '{:0>4X}'.format(int(bits, base=2))
+    # return bits
+
+
+def axesToHex(ax1, ax2):
+    """The function intToHex() converts integer values for dual axes to
+    a hexadecimal string, using a four bit word."""
+    axes = ax1, ax2
+    hexString = ''
+    for ax in axes:
+        axString = '{:0>4X}'.format(abs(ax))
+        if ax < 0:
+            axString = '1' + axString[1:]
+
+        hexString += axString
+
+    return hexString
+
+
 if pygame.joystick.get_init():                      # Run program if joystick is detected/module is initialized
     # joystick = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
     # print(pygame.joystick.get_count())
@@ -74,7 +97,7 @@ if pygame.joystick.get_init():                      # Run program if joystick is
     # ### ### #
     # p.start(0)                                    # Start PWM
     # ### Open window ### #
-    ard = serial.Serial('/dev/ttyUSB0', 9600)
+    ard = serial.Serial('/dev/ttyACM0', 9600)
     screen = pygame.display.set_mode((400,400))     # Creates a pygame screen object to write shapes to
     while True:                                       # Run loop continuously until break
         axes, buttons = readJoystick(joystick)[0], readJoystick(joystick)[1]        # axes[0] = x, axes[1] = y, axes[3] = z
@@ -88,15 +111,14 @@ if pygame.joystick.get_init():                      # Run program if joystick is
         pygame.draw.circle(screen, (0,0,255), (xps, yps), zps, 0)       # writes blue circle at (xps,yps) of radius (zps)
         pygame.display.update()                     # Updates display
 
-        dc = int(((-axes[2]+1)*100)/2)             # Set Duty Cycle
+        dc = int(((-axes[2]+1)*100)/2)              # Set Duty Cycle
         # p.ChangeDutyCycle(dc)                     # Change duty cycle for p
         # print('Duty Cycle ' + str(dc))
         axes, buttons = readJoystick(joystick)
-        axess = [int(xi*1000) for xi in axes]           # multiplies axes' floating points to make them ints for serial transmission
-        buttonString = ''.join([str(i) for i in buttons]) # convert this list of 1s and 0s to HIGHs and LOWs, then send to Arduino
+        axesString = axesToHex(*[int(xi*255) for xi in axes[:2]])       # multiplies axes' floating points to make them ints for serial transmission
+        buttonString = buttonsToHex(buttons)         # convert this list of 1s and 0s to HIGHs and LOWs, then send to Arduino
         ard.write(buttonString.encode())
-        # print(axes, axess)
-        print(buttonString)
+        print(axesString, buttonString)
         # print()                                     # Prints button values (index [1]) of return from readJoystick()
         if (buttons[0] & buttons[1]  & buttons[4] & buttons[6]):  # If buttons labelled 1,2,5,and 7 are pressed...
             break                                   # Break out of while loop
