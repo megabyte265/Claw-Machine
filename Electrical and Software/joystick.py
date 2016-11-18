@@ -75,7 +75,7 @@ if pygame.joystick.get_init():                      # Run program if joystick is
     # ### ### #
     # p.start(0)                                    # Start PWM
     # ### Open window ### #
-    ard = serial.Serial('/dev/ttyUSB0', 9600)
+    ard = serial.Serial('/dev/ttyACM0', 9600)
     screen = pygame.display.set_mode((400,400))     # Creates a pygame screen object to write shapes to
     while True:                                       # Run loop continuously until break
         axes, buttons = readJoystick(joystick)[0], readJoystick(joystick)[1]        # axes[0] = x, axes[1] = y, axes[3] = z

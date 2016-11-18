@@ -31,40 +31,47 @@
  SWITCH CASE   https://www.arduino.cc/en/Reference/SwitchCase
  digitalWrite()   https://www.arduino.cc/en/Reference/DigitalWrite
 */
-
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 void setup()
 {
   Serial.begin(9600);     // open serial port. Baud rate is 9600
-  for (int i=2;i<=9;i++)  // loop to initialize pins
-  {
-    pinMode(i, OUTPUT);
-  }
-  pinMode(13, OUTPUT);    // adds pin 13 (built-in LED) for testing
+  lcd.begin(16, 2);
 }
-
-void bitsToDigitalWrite(char buttons[], int len)
 /*
  * bitsToDigitalWrite is meant to take a char array of ones and zeros (like 10110100)
  * and convert it into an array of integers, which can be passed directly to digitalWrite.
  */
-{
+void bitsToDigitalWrite(char buttons[], int len){
+  
   String bitString;
   int pins[len] = {0};
   for (int i=0; i<len; i++)         // while loop iterates through each input string index
   {
     bitString = buttons[i];
     pins[i] = bitString.toInt();    // parses character to integer
-    digitalWrite(i+2, pins[i]);     // sets pin value to high or low
+    lcd.setCursor(i, 1);
+    lcd.print("1");
   }
   digitalWrite(13, pins[0]);        // test to determine if button 1 is pressed
+  
 }
-
+void hexToDigitalWrite(char axles[], int len){
+    String hexString = String(0x8f, DEC);
+  for (int j=0; j<len; j++){
+    hexString = axles[j];
+    lcd.setCursor(j, 0);
+    lcd.print(hexString);
+    }
+}
 
 void loop() {
   int numberButtons = 16;
   int numberOutputs = 8;
   int bytes;                                            // number of bytes read
   char buttons[numberButtons];
+  int numberAxles = 2;
+  char axles[numberAxles];
   if (Serial.available() > numberButtons)
   {
     bytes = Serial.readBytes(buttons, numberButtons);   // reads specific number of bytes to buttons buffer
