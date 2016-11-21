@@ -63,8 +63,8 @@ def buttonsToHex(buttonArray):
     """The function binaryToHex() converts a binary array of button
     states to a hexadecimal string, using a four byte word."""
     bits = ''.join([str(b) for b in buttonArray])
-    return '{:0>4X}'.format(int(bits, base=2))
-    # return bits
+    # return '{:0>4X}'.format(int(bits, base=2))
+    return bits
 
 
 def axesToHex(ax1, ax2):
@@ -97,7 +97,7 @@ if pygame.joystick.get_init():                      # Run program if joystick is
     # ### ### #
     # p.start(0)                                    # Start PWM
     # ### Open window ### #
-    ard = serial.Serial('/dev/ttyACM0', 9600)
+    ard = serial.Serial('/dev/ttyUSB0', 9600)
     screen = pygame.display.set_mode((400,400))     # Creates a pygame screen object to write shapes to
     while True:                                       # Run loop continuously until break
         axes, buttons = readJoystick(joystick)[0], readJoystick(joystick)[1]        # axes[0] = x, axes[1] = y, axes[3] = z
@@ -117,9 +117,13 @@ if pygame.joystick.get_init():                      # Run program if joystick is
         axes, buttons = readJoystick(joystick)
         axesString = axesToHex(*[int(xi*255) for xi in axes[:2]])       # multiplies axes' floating points to make them ints for serial transmission
         buttonString = buttonsToHex(buttons)         # convert this list of 1s and 0s to HIGHs and LOWs, then send to Arduino
+
+        axesString = "a" + axesString + "\n"
+        buttonString = "b" + buttonString + "\n"
+
+        ard.write(axesString.encode())
         ard.write(buttonString.encode())
-        print(axesString, buttonString)
-        # print()                                     # Prints button values (index [1]) of return from readJoystick()
+
         if (buttons[0] & buttons[1]  & buttons[4] & buttons[6]):  # If buttons labelled 1,2,5,and 7 are pressed...
             break                                   # Break out of while loop
 
