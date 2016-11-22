@@ -49,7 +49,6 @@ def sendButton(event, bit):
     to arduino via serial communication."""
     button = event.__dict__['button']
     buttonString = 'b' + '{:02.0f}'.format(button) + str(bit) + '\n'
-    print(buttonString)
     ard.write(buttonString.encode())
 
 
@@ -57,6 +56,8 @@ def sendAxis(event):
     """The function sendAxis() sends button press/release information
     to arduino via serial communication."""
     axis = event.__dict__['axis']
+    if axis > 1:
+        return
     value = event.__dict__['value']
     intValue = int(value*255)
     axisString = '{:03.0f}'.format(abs(intValue))
@@ -65,7 +66,6 @@ def sendAxis(event):
     else:
         axisString = '0' + axisString
     axisString = 'a' + str(axis) + axisString + '\n'
-    print(axisString)
     ard.write(axisString.encode())
 
 
