@@ -47,6 +47,9 @@ void setup() {
     pinMode(i, OUTPUT);
   }
   pinMode(13, OUTPUT);    // adds pin 13 (built-in LED) for testing
+  printLCD("+000", 3, 0);
+  printLCD("+000", 9, 0);
+  printLCD("0000000000000000", 0, 1);
 }
 
 
@@ -73,56 +76,43 @@ int hexToInt(String hexString) {
 }
 
 
-void hexToAxes(String byteString, int ax1, int ax2) {
-/* hexToAxes takes a string representing a string containing the hexadecimal
-   representation of integers corresponding to two signed integers and
-   converts them to integers for the individual axes.
-*/
-  String byteString1 = byteString.substring(0, 3);
-  ax1 = hexToInt(byteString1.substring(1));
-  if (byteString.charAt(0) == '1') {
-    ax1 *= -1;
-  }
-
-  String byteString2 = byteString.substring(4, 7);
-  ax2 = hexToInt(byteString2.substring(1));
-  if (byteString.charAt(4) == '1') {
-    ax2 *= -1;
-  }
-}
-
-
-void bitsToDigitalWrite(char buttons[], int len) {
-/* bitsToDigitalWrite is meant to take a char array of ones and zeros (like 10110100)
-   and convert it into an array of integers, which can be passed directly to digitalWrite.
-*/
-  String bitString;
-  int pins[len] = {0};
-  for (int i=0; i<len; i++) {       // while loop iterates through each input string index
-    bitString = buttons[i];
-    pins[i] = bitString.toInt();    // parses character to integer
-    // digitalWrite(i+2, pins[i]);     // sets pin value to high or low
-  }
-  digitalWrite(13, pins[0]);        // test to determine if button 1 is pressed
-}
-
-
 void loop() {
   String input;
-  String axes;
-  String buttons;
+  char sign;
+  int button;
+  int col;
+  int value;
   if (Serial.available() > 0) {
     input = Serial.readStringUntil('\n'); // reads specific number of bytes to buttons buffer
     if (input.length() > 0) {             // only calls function if bytes have been read
-      if (input.charAt(0) == 'a') {
-        axes = input.substring(1, input.length());
-        printLCD(axes, 5, 0);
+      switch (input.charAt(0)) {
+        case 'a':
+          switch (input.charAt(1)) {
+            case '0':
+              col = 9;
+              break;
+            case '1':
+              col = 3;
+              break;
+          }
+          switch (input.charAt(2)) {
+            case '0':
+              sign = '+';
+              break;
+            case '1':
+              sign = '-';
+              break;
+          }
+          value = input.substring(3, input.length()).toInt();
+          printLCD(sign + String(value), col, 0);
+          break;
+        case 'b':
+          button = input.substring(1, 3).toInt();
+          value = input.substring(3, 4).toInt();
+          printLCD(String(value), button, 1);
+          // digitalWrite(button, value);  // passes buffer (char array) to function for parsing
+          break;
       }
-      else if (input.charAt(0) == 'b') {
-        buttons = input.substring(1, input.length());
-        printLCD(buttons, 0, 1);
-      }
-      // bitsToDigitalWrite(buttons, numberOutputs);  // passes buffer (char array) to function for parsing
     }
   }
 }
