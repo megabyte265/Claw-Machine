@@ -1,6 +1,6 @@
 /*
   processSerialData
-  Author: Shane Williams
+  Author: Shane Williams, Eric Van Horn, and Jacob Van Horn
   Author Contact: smw0031@auburn.edu
   Last Edit: 16 November 2016 by Eric Van Horn
 
@@ -28,106 +28,96 @@
   FOR LOOPS   https://www.arduino.cc/en/Reference/For
   SWITCH CASE   https://www.arduino.cc/en/Reference/SwitchCase
   digitalWrite()   https://www.arduino.cc/en/Reference/DigitalWrite
+  Pwm frequency http://playground.arduino.cc/Code/PwmFrequency
 */
-#include <LiquidCrystal.h>
-<<<<<<< HEAD
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-void setup()
-{
-  Serial.begin(9600);     // open serial port. Baud rate is 9600
-  lcd.begin(16, 2);
-}
-/*
- * bitsToDigitalWrite is meant to take a char array of ones and zeros (like 10110100)
- * and convert it into an array of integers, which can be passed directly to digitalWrite.
- */
-void bitsToDigitalWrite(char buttons[], int len){
-  
-  String bitString;
-  int pins[len] = {0};
-  for (int i=0; i<len; i++)         // while loop iterates through each input string index
-  {
-    bitString = buttons[i];
-    pins[i] = bitString.toInt();    // parses character to integer
-    lcd.setCursor(i, 1);
-    lcd.print("1");
-  }
-  digitalWrite(13, pins[0]);        // test to determine if button 1 is pressed
-  
-}
-void hexToDigitalWrite(char axles[], int len){
-    String hexString = String(0x8f, DEC);
-  for (int j=0; j<len; j++){
-    hexString = axles[j];
-    lcd.setCursor(j, 0);
-    lcd.print(hexString);
+int xDir = 9;
+int xEn = 10;
+int xStep = 8;
+
+int yDir = 12;
+int yEn = 13;
+int yStep = 11;
+
+int freqDivisor = 31250;
+
+void setPwmFrequency(int pin, int divisor) {
+  byte mode;
+  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 64: mode = 0x03; break;
+      case 256: mode = 0x04; break;
+      case 1024: mode = 0x05; break;
+      default: return;
     }
-=======
-
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-
-void printLCD(String input, int col, int row) {
-  lcd.setCursor(col, row);
-  lcd.print(input);
+    if(pin == 5 || pin == 6) {
+      TCCR0B = TCCR0B & 0b11111000 | mode;
+    } else {
+      TCCR1B = TCCR1B & 0b11111000 | mode;
+    }
+  } else if(pin == 3 || pin == 11) {
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 32: mode = 0x03; break;
+      case 64: mode = 0x04; break;
+      case 128: mode = 0x05; break;
+      case 256: mode = 0x06; break;
+      case 1024: mode = 0x07; break;
+      default: return;
+    }
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+  }
 }
 
 
 void setup() {
-  lcd.begin(16,2);        // set up the LCD's number of columns and rows
+  //lcd.begin(16,2);        // set up the LCD's number of columns and rows
   Serial.begin(9600);     // open serial port. Baud rate is 9600
-  for (int i=2;i<=9;i++)  // loop to initialize pins
+  for (int i=8;i<=13;i++)  // loop to initialize pins
   {
     pinMode(i, OUTPUT);
   }
-  pinMode(13, OUTPUT);    // adds pin 13 (built-in LED) for testing
-  printLCD("+000", 3, 0);
-  printLCD("+000", 9, 0);
-  printLCD("0000000000000000", 0, 1);
+  setPwmFrequency(xStep, freqDivisor);
+  setPwmFrequency(yStep, freqDivisor);
 }
 
-
-int hexToInt(String hexString) {
-  int len = hexString.length();
-  int value = 0;
-  int tempValue;
-  int power;
-  byte tempBit;
-  for (int i = 0; i < len; i++) {
-    tempBit = byte(hexString[i]);
-    if (tempBit >= '0' and tempBit <= '9') {
-      tempValue = int(tempBit - '0');
-    }
-    else if (tempBit >= 'A' and tempBit <= 'F') {
-      tempValue = int(tempBit - 'A' + 10);
-    }
-    else if (tempBit >= 'a' and tempBit <= 'f') {
-      tempValue = int(tempBit - 'a' + 10);
-    }
-    value += tempValue*bit((len-i-1)*4);
+void dir(int sign, int axis){
+  //digitalWrite(axis, sign);
+  switch (sign) {
+    case 0:
+      digitalWrite(axis, LOW);
+      break;
+    case 1:
+      digitalWrite(axis, HIGH);
+      break;
   }
-  return value;
->>>>>>> 099266a8f8798a10db54b767fb25a8698ce5ecb8
+  delay(1);
+}
+
+void moov(int input, int aEN, int aST, int aDI, int sign){  //mispelled move on purpose because move is an reserved word
+  //int in = input.toInt();
+  if (input > 50){
+    digitalWrite(aEN, HIGH);
+    delay(1);
+    dir(sign, aDI);
+    analogWrite(aST, 2.5);
+  }else{
+    digitalWrite(aEN, LOW);
+    analogWrite(aST, 0);
+  }
 }
 
 void loop() {
-<<<<<<< HEAD
-  int numberButtons = 16;
-  int numberOutputs = 8;
-  int bytes;                                            // number of bytes read
-  char buttons[numberButtons];
-  int numberAxles = 2;
-  char axles[numberAxles];
-  if (Serial.available() > numberButtons)
-  {
-    bytes = Serial.readBytes(buttons, numberButtons);   // reads specific number of bytes to buttons buffer
-    if (bytes > 0) {                                    // only calls function if bytes have been read
-      bitsToDigitalWrite(buttons, numberOutputs);       // passes buffer (char array) to function for parsing
-=======
   String input;
-  char sign;
+  int sign;
   int button;
-  int col;
   int value;
+  int axis;
+  int aEn;
+  int aSt;
+  int aDir;
   if (Serial.available() > 0) {
     input = Serial.readStringUntil('\n'); // reads specific number of bytes to buttons buffer
     if (input.length() > 0) {             // only calls function if bytes have been read
@@ -135,31 +125,26 @@ void loop() {
         case 'a':
           switch (input.charAt(1)) {
             case '0':
-              col = 9;
+              axis = 0;
               break;
             case '1':
-              col = 3;
+              axis = 3;
               break;
           }
-          switch (input.charAt(2)) {
-            case '0':
-              sign = '+';
-              break;
-            case '1':
-              sign = '-';
-              break;
-          }
+          sign = int(input.charAt(2));
+          //sign = String (input.charAt(2));
+          aEn = xEn + axis;
+	        aSt = xStep + axis;
+	        aDir = xDir + axis;
           value = input.substring(3, input.length()).toInt();
-          printLCD(sign + String(value), col, 0);
+          moov(value, aEn, aSt, aDir, sign);
           break;
         case 'b':
           button = input.substring(1, 3).toInt();
           value = input.substring(3, 4).toInt();
-          printLCD(String(value), button, 1);
           // digitalWrite(button, value);  // passes buffer (char array) to function for parsing
           break;
       }
->>>>>>> 099266a8f8798a10db54b767fb25a8698ce5ecb8
     }
   }
 }
