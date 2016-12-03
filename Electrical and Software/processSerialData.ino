@@ -49,6 +49,10 @@ int yStep = 11;
 
 int freqDivisor = 31250;
 
+int analogLimit = 900;
+
+int analogThreshold = 100;
+
 void setPwmFrequency(int pin, int divisor) {
   byte mode;
   if (pin == 5 || pin == 6 || pin == 9 || pin == 10) {
@@ -89,6 +93,7 @@ void setup() {
   }
   setPwmFrequency(xStep, freqDivisor);
   setPwmFrequency(yStep, freqDivisor);
+  Serial.setTimeout(100);
   /*pinMode(button1, INPUT);
     digitalWrite(button1, HIGH);      //enable pullups to make pin high
     clawLeft.attach(6);           // attaches the servo on pin 9 to the servo object
@@ -163,8 +168,9 @@ void dir(int sign, int axis) {
 }
 
 void moov(int input, int aEN, int aST, int aDI, int sign) { //mispelled move on purpose because move is an reserved word
-  //int in = input.toInt();
-  if (input > 50) {
+  // int limit = analogRead(1);
+  // if (limit < analogLimit && input > analogThreshold) {
+  if (input > analogThreshold) {
     digitalWrite(aEN, HIGH);
     delay(1);
     dir(sign, aDI);
@@ -175,24 +181,36 @@ void moov(int input, int aEN, int aST, int aDI, int sign) { //mispelled move on 
   }
 }
 
-int killSwitch(int A1, int A2, int A3, int A4, int dir, int ax) {
-  if (A1 > 400 && dir == 0 && ax == 1) {
-    return 0;
+void killSwitch(int dir, int ax, int limits[4]) {
+  //int A1 = analogRead(1);
+  //int A2 = analogRead(2);
+  //int A3 = analogRead(3);
+  //int A4 = analogRead(4);
+  for (int i=1; i<=4; i++) {
+    if (analogRead(i) > analogLimit) {
+      limits[i] = 1;
+    }
+    else {
+      limits[i] = 0;
+    }
+  }
+  /*if (A1 > analogLimit && dir == 0 && ax == 1) {
+    return 1;
   } else {
-    if (A2 > 400 && dir == 0 && ax == 0) {
-      return 0;
+    if (A2 > analogLimit && dir == 0 && ax == 0) {
+      return 1;
     } else {
-      if (A3 > 400 && dir == 1 && ax == 1) {
-        return 0;
+      if (A3 > analogLimit && dir == 1 && ax == 1) {
+        return 1;
       } else {
-        if (A4 > 400 && dir == 1 && ax == 0) {
-          return 0;
-        } else {
+        if (A4 > analogLimit && dir == 1 && ax == 0) {
           return 1;
+        } else {
+          return 0,0,0,0;
         }
       }
     }
-  }
+  }*/
 }
 
 /*void chosenOne();
@@ -254,7 +272,7 @@ int killSwitch(int A1, int A2, int A3, int A4, int dir, int ax) {
   while ((stopTime - startTime < 3500)
   {
   delay(500);
-    stopTime = millis();
+  stopTime = millis();
   }
 
   endTime = 3500;
@@ -265,7 +283,7 @@ int killSwitch(int A1, int A2, int A3, int A4, int dir, int ax) {
   while ((stopTime - startTime < 1000)
   {
   closeGrabberPartially();
-    stopTime = millis();
+  stopTime = millis();
   }
 
   endTime = 1000;
@@ -337,10 +355,6 @@ void loop() {
   int aEn;
   int aSt;
   int aDir;
-  int A1 = analogRead(1);
-  int A2 = analogRead(2);
-  int A3 = analogRead(3);
-  int A4 = analogRead(4);
   if (Serial.available() > 0) {
     input = Serial.readStringUntil('\n'); // reads specific number of bytes to buttons buffer
     if (input.length() > 0) {             // only calls function if bytes have been read
@@ -362,14 +376,13 @@ void loop() {
           break;
       }
       sign = int(input.charAt(2));
-      //sign = String (input.charAt(2));
       aEn = xEn + axis;
       aSt = xStep + axis;
       aDir = xDir + axis;
       value = input.substring(3, input.length()).toInt();
-      if (killSwitch(A1, A2, A3, A4, sign, axis) == 1) {
+      //if (killSwitch(sign, axis) == 1) {
         moov(value, aEn, aSt, aDir, sign);
-      }
+      //}
     }
   }
 }
