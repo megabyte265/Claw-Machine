@@ -7,7 +7,8 @@
   Description:
     processSerialData is a preliminary Arduino sketch used for the S.C.O.R.E. crane machine project.
     Ultimately, this program's purpose is to make the Arduino read serial input from a
-    Raspberry Pi or computer, and interpret that serial data as values used to drive digital output pins. The digital output pins shall be connected to motor controllers and servos to drive the crane machine.
+    Raspberry Pi or computer, and interpret that serial data as values used to drive digital output pins. The digital output pins shall be connected to motor controllers and servos
+    to drive the crane machine.
 
   Present State of Development:
     Currently, functions are being developed to convert data received from the serial port into a form that can
@@ -21,20 +22,28 @@
       --Using button to "Start" game mode
       --Using button command to make claw DROP, GRAB, RISE, and RETURN HOME
       --Setting limits of claw's range of motion
-*/
-
-/*
   = === NOTES === =
   FOR LOOPS   https://www.arduino.cc/en/Reference/For
   SWITCH CASE   https://www.arduino.cc/en/Reference/SwitchCase
   digitalWrite()   https://www.arduino.cc/en/Reference/DigitalWrite
   Pwm frequency http://playground.arduino.cc/Code/PwmFrequency
 */
-int xDir = 9;
-int xEn = 10;
-int xStep = 8;
+#include <Servo.h>
 
-int yDir = 12;
+Servo clawLeft;  // create servo object to control a servo
+Servo clawRight;  // create servo object to control a servo
+Servo spool;
+
+int button1 = 4; //button pin, connect to ground to move servo
+int press1 = 0;
+
+int pos = 0; // variable to store the servo position
+
+int xDir = 8;
+int xEn = 12;
+int xStep = 10;
+
+int yDir = 9;
 int yEn = 13;
 int yStep = 11;
 
@@ -42,8 +51,8 @@ int freqDivisor = 31250;
 
 void setPwmFrequency(int pin, int divisor) {
   byte mode;
-  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
-    switch(divisor) {
+  if (pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+    switch (divisor) {
       case 1: mode = 0x01; break;
       case 8: mode = 0x02; break;
       case 64: mode = 0x03; break;
@@ -51,13 +60,13 @@ void setPwmFrequency(int pin, int divisor) {
       case 1024: mode = 0x05; break;
       default: return;
     }
-    if(pin == 5 || pin == 6) {
+    if (pin == 5 || pin == 6) {
       TCCR0B = TCCR0B & 0b11111000 | mode;
     } else {
       TCCR1B = TCCR1B & 0b11111000 | mode;
     }
-  } else if(pin == 3 || pin == 11) {
-    switch(divisor) {
+  } else if (pin == 3 || pin == 11) {
+    switch (divisor) {
       case 1: mode = 0x01; break;
       case 8: mode = 0x02; break;
       case 32: mode = 0x03; break;
@@ -71,44 +80,254 @@ void setPwmFrequency(int pin, int divisor) {
   }
 }
 
-
 void setup() {
   //lcd.begin(16,2);        // set up the LCD's number of columns and rows
   Serial.begin(9600);     // open serial port. Baud rate is 9600
-  for (int i=8;i<=13;i++)  // loop to initialize pins
+  for (int i = 8; i <= 13; i++) // loop to initialize pins
   {
     pinMode(i, OUTPUT);
   }
   setPwmFrequency(xStep, freqDivisor);
   setPwmFrequency(yStep, freqDivisor);
+  /*pinMode(button1, INPUT);
+    digitalWrite(button1, HIGH);      //enable pullups to make pin high
+    clawLeft.attach(6);           // attaches the servo on pin 9 to the servo object
+    clawRight.attach(5);          // attaches the servo on pin 9 to the servo object
+    spool.attach(3);
+    for (int i = 0; i < 200; i++)
+    {
+    openGrabber();
+    }*/
 }
+/*
+  void lowerSpool()
+  {
+  spool.write(40);
+  delay(15);
+  }
 
-void dir(int sign, int axis){
-  //digitalWrite(axis, sign);
+  void stopSpool()
+  {
+  spool.write(97);
+  delay(15);
+  }
+
+  void raiseSpool()
+  {
+  spool.write(180);
+  delay(15);
+  }
+  void closeGrabberCompletely()
+  {
+  clawLeft.write(40);
+  clawRight.write(80);
+  delay(15);
+  }
+  void closeGrabberPartially()
+  {
+  clawLeft.write(40);         // was 60
+  clawRight.write(80);    // was 60
+  delay(15);
+  }
+  void openGrabber()
+  {
+  clawLeft.write(100);
+  clawRight.write(20);
+  delay(15);
+  }*/
+
+void dir(int sign, int axis) {
   switch (sign) {
-    case 0:
-      digitalWrite(axis, LOW);
+    case '0':
+      switch (axis) {
+        case 8:
+          digitalWrite(axis, HIGH);
+          break;
+        case 9:
+          digitalWrite(axis, LOW);
+          break;
+      }
       break;
-    case 1:
-      digitalWrite(axis, HIGH);
+    case '1':
+      switch (axis) {
+        case 8:
+          digitalWrite(axis, LOW);
+          break;
+        case 9:
+          digitalWrite(axis, HIGH);
+          break;
+      }
       break;
   }
   delay(1);
 }
 
-void moov(int input, int aEN, int aST, int aDI, int sign){  //mispelled move on purpose because move is an reserved word
+void moov(int input, int aEN, int aST, int aDI, int sign) { //mispelled move on purpose because move is an reserved word
   //int in = input.toInt();
-  if (input > 50){
+  if (input > 50) {
     digitalWrite(aEN, HIGH);
     delay(1);
     dir(sign, aDI);
     analogWrite(aST, 2.5);
-  }else{
+  } else {
     digitalWrite(aEN, LOW);
     analogWrite(aST, 0);
   }
 }
 
+int killSwitch(int A1, int A2, int A3, int A4, int dir, int ax) {
+  if (A1 > 400 && dir == 0 && ax == 1) {
+    return 0;
+  } else {
+    if (A2 > 400 && dir == 0 && ax == 0) {
+      return 0;
+    } else {
+      if (A3 > 400 && dir == 1 && ax == 1) {
+        return 0;
+      } else {
+        if (A4 > 400 && dir == 1 && ax == 0) {
+          return 0;
+        } else {
+          return 1;
+        }
+      }
+    }
+  }
+}
+
+/*void chosenOne();
+  // SET VARIABLES
+  // VALUES
+  int frequency = 6;
+  int enable = 1;
+  int direkshunX = 0;
+  int direkshunY = 0;
+  // PINS
+  // pins (signals)
+  int xStepPin = 10;
+  int yStepPin = 11;
+  int clawPin = 3;
+  int heightPin = 5;
+  // pins (states)
+  int xDirPin = 6;
+  int yDirPin = 7;
+  int xEnablePin = 8;
+  int yEnablePin = 9;
+  int direkshunXPin = 10;
+  int direkshunYPin = 11;
+
+  unsigned long startTime = millis();        // assign startTime comparison value
+  for (int i = 0, 10, i++)          // kill some time so stopTime=/=startTime
+  {
+  }
+  unsigned long stopTime = millis();        // assign stopTime value
+  while ((stopTime - startTime) < 3000)     // while will run for 3 seconds
+  {
+  openGrabber();                // open grabber
+  stopTime = millis();              // new time comparison value
+  }
+
+  // # ### ### #
+  //
+  //
+  // # ### Drop THE CLAW ### #
+
+  startTime = millis();             // new time comparison value
+  while ((stopTime - startTime) < 5000)   // while runs for 5 seconds
+  {
+  lowerSpool();                 // lower the claw
+  stopTime = millis();              // new time comparison value
+  }
+  stopSpool();                  // stops moving the spool
+
+  // # ### ### #
+  //
+  //
+  // # ### Close The CLAW ### #
+
+  long grab = random(0, 1);
+  long endTime = 0;
+  if (grab > 0.75)
+  {
+  startTime = millis();
+  closeGrabberCompletely();
+  while ((stopTime - startTime < 3500)
+  {
+  delay(500);
+    stopTime = millis();
+  }
+
+  endTime = 3500;
+  }
+  else if
+  {
+  startTime = millis();
+  while ((stopTime - startTime < 1000)
+  {
+  closeGrabberPartially();
+    stopTime = millis();
+  }
+
+  endTime = 1000;
+  }
+
+  // # ### ### #
+  //
+  //
+  // # ### Raise The CLAW ### #
+
+  startTime = millis();
+  while ((stopTime - startTime) < 5000)
+  {
+  raiseSpool();
+  stopTime = millis();
+  }
+  stopSpool();
+  // # ### ### #
+  //
+  //
+  // # ### Return X Axis ### #
+  while (analogRead(0) < 500)
+  {
+  moov(255, 12, 10, 8, 1);
+  }
+
+
+  // # ### ### #
+  //
+  //
+  // # ### Return Y Axis ### #
+  while (analogRead(1) < 500)
+  {
+  moov(255, 13, 11, 9, 0);
+  }
+
+
+  // # ### ### #
+  //
+  //
+  // # ### Open Claw ### #
+  startTime = millis();
+
+  while ((stopTime - startTime) < endTime)
+  {
+  openGrabber();
+  stopTime = millis();
+  }
+
+  //# ### ### #
+  //
+  //
+  // # ### Close Claw ### #
+  startTime = millis();
+
+  while ((stopTime - startTime) < 5000)s
+  {
+  closeGrabberCompletely();
+  stopTime = millis();
+  }
+  analogWrite(clawPin, 0);
+*/
 void loop() {
   String input;
   int sign;
@@ -118,6 +337,10 @@ void loop() {
   int aEn;
   int aSt;
   int aDir;
+  int A1 = analogRead(1);
+  int A2 = analogRead(2);
+  int A3 = analogRead(3);
+  int A4 = analogRead(4);
   if (Serial.available() > 0) {
     input = Serial.readStringUntil('\n'); // reads specific number of bytes to buttons buffer
     if (input.length() > 0) {             // only calls function if bytes have been read
@@ -128,22 +351,24 @@ void loop() {
               axis = 0;
               break;
             case '1':
-              axis = 3;
+              axis = 1;
               break;
           }
-          sign = int(input.charAt(2));
-          //sign = String (input.charAt(2));
-          aEn = xEn + axis;
-	        aSt = xStep + axis;
-	        aDir = xDir + axis;
-          value = input.substring(3, input.length()).toInt();
-          moov(value, aEn, aSt, aDir, sign);
           break;
         case 'b':
           button = input.substring(1, 3).toInt();
           value = input.substring(3, 4).toInt();
           // digitalWrite(button, value);  // passes buffer (char array) to function for parsing
           break;
+      }
+      sign = int(input.charAt(2));
+      //sign = String (input.charAt(2));
+      aEn = xEn + axis;
+      aSt = xStep + axis;
+      aDir = xDir + axis;
+      value = input.substring(3, input.length()).toInt();
+      if (killSwitch(A1, A2, A3, A4, sign, axis) == 1) {
+        moov(value, aEn, aSt, aDir, sign);
       }
     }
   }
